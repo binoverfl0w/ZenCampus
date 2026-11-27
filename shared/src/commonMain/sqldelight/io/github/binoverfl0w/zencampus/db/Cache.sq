@@ -1,0 +1,29 @@
+CREATE TABLE cache_entry (
+    account TEXT NOT NULL,
+    resource TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY(account, resource)
+);
+
+selectAccount:
+SELECT * FROM cache_entry WHERE account = ? ORDER BY resource;
+
+selectScopes:
+SELECT DISTINCT account FROM cache_entry;
+
+selectResource:
+SELECT * FROM cache_entry WHERE account = ? AND resource = ?;
+
+upsert:
+INSERT OR REPLACE INTO cache_entry(account, resource, payload, updated_at)
+VALUES (?, ?, ?, ?);
+
+deleteResource:
+DELETE FROM cache_entry WHERE account = ? AND resource = ?;
+
+deleteAccount:
+DELETE FROM cache_entry WHERE account = ?;
+
+deleteAll:
+DELETE FROM cache_entry;

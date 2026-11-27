@@ -1,0 +1,138 @@
+name: Build and test
+
+# Every push builds and unit-tests each platform on its own OS. Device and UI checks that need a real
+# simulator, emulator or display run on the development machines; see docs/PLATFORMS.md.
+on:
+  push:
+    # Branches only: a release tag points at a commit CI has already checked, and release.yml builds it.
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch replaces the run in progress.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Android and Linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools platforms;android-35 build-tools;35.0.0
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+      - name: Test, build and lint
+        run: ./gradlew :shared:jvmTest :desktopApp:test :androidApp:testDebugUnitTest :androidApp:assembleDebug :androidApp:lintDebug --no-daemon
+      - name: Keep test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-test-reports
+          path: '**/build/reports/'
+          retention-days: 7
+
+  apple:
+    name: iOS and macOS
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+      - name: Cache the Kotlin/Native toolchain
+        # The compiler, LLVM and prebuilt platform libraries live outside the Gradle home that setup-gradle caches.
+        uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
+      - name: Use the preinstalled Android SDK
+        # Gradle configures the Android modules on every host, so it needs an SDK even here.
+        run: |
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
+          test -d "$sdk" || { echo "No Android SDK on this runner"; exit 1; }
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+      - name: iOS simulator tests, device compilation and macOS desktop tests
+        run: ./gradlew :shared:iosSimulatorArm64Test :shared:compileKotlinIosArm64 :desktopApp:test --no-daemon
+      - name: Install XcodeGen
+        run: brew install xcodegen
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+      - name: Build the iOS simulator app
+        run: ./iosApp/build-simulator.sh
+      - name: Keep test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: apple-test-reports
+          path: '**/build/reports/'
+          retention-days: 7
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+      - name: Use the preinstalled Android SDK
+        # Gradle configures the Android modules on every host, so it needs an SDK even here.
+        run: |
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          test -n "$sdk" && test -d "$sdk" || { echo "No Android SDK on this runner"; exit 1; }
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+      - name: Shared and desktop tests
+        run: ./gradlew :shared:jvmTest :desktopApp:test --no-daemon
+      # The runner has an interactive desktop, so the Compose and Chromium checks run here too.
+      - name: Desktop UI and browser tests
+        # Chromium's own log is kept when this step fails.
+        run: ZENCAMPUS_CEF_LOG="$RUNNER_TEMP/cef.log" ./gradlew :desktopApp:desktopUiTest --no-daemon
+      - name: Keep the Chromium log
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-chromium-log
+          path: ${{ runner.temp }}/cef.log
+          retention-days: 7
+      - name: Build the installer
+        run: ./gradlew :desktopApp:packageMsi --no-daemon
+      # Unsigned and without update or crash settings: only for trying a build by hand.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows-installer
+          path: desktopApp/build/compose/binaries/main/msi/*.msi
+          if-no-files-found: error
+          retention-days: 7
+      - name: Keep test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-test-reports
+          path: '**/build/reports/'
+          retention-days: 7

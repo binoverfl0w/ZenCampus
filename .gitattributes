@@ -1,0 +1,11 @@
+# Shell scripts keep Unix line endings on every checkout, including Windows CI; Windows batch files keep CRLF.
+* text=auto
+gradlew text eol=lf
+*.sh text eol=lf
+desktopApp/packaging/zencampus text eol=lf
+*.bat text eol=crlf
+*.ico binary
+*.icns binary
+*.png binary
+*.jar binary
+*.ttf binary

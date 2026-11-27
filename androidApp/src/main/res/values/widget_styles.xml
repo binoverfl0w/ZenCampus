@@ -1,0 +1,43 @@
+<resources>
+    <!-- Home-screen widget type, matching the app: Manrope, semibold titles, muted details. -->
+    <style name="WidgetLabel">
+        <item name="android:fontFamily">@font/manrope_semibold</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:letterSpacing">0.07</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/widget_muted</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <style name="WidgetTitle">
+        <item name="android:fontFamily">@font/manrope_semibold</item>
+        <item name="android:textSize">13.5sp</item>
+        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <style name="WidgetDetail">
+        <item name="android:fontFamily">@font/manrope_medium</item>
+        <item name="android:textSize">11.5sp</item>
+        <item name="android:textColor">@color/widget_muted</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <style name="WidgetAvatar">
+        <item name="android:layout_width">28dp</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@font/manrope_semibold</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/widget_surface</item>
+    </style>
+    <style name="WidgetChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingHorizontal">8dp</item>
+        <item name="android:paddingVertical">3dp</item>
+        <item name="android:fontFamily">@font/manrope_semibold</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:maxLines">1</item>
+    </style>
+</resources>

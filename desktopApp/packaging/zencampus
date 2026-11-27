@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ZEN_BUNDLE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+ZEN_APP_DIR="$ZEN_BUNDLE_DIR/lib/app"
+ZEN_JAVA="$ZEN_BUNDLE_DIR/lib/runtime/bin/java"
+ZEN_CONFIG="$ZEN_APP_DIR/zencampus.cfg"
+ZEN_CLASSPATH=""
+ZEN_MAIN_CLASS=""
+ZEN_JAVA_OPTIONS=()
+
+# Some Linux graphics stacks abort inside Skia during GPU initialization. The
+# software renderer avoids that native crash; users can opt into a different
+# Skiko renderer explicitly if it works on their machine.
+export SKIKO_RENDER_API="${SKIKO_RENDER_API:-SOFTWARE}"
+
+# Read the generated configuration as literal data; preserve its classpath order.
+while IFS= read -r ZEN_LINE || [[ -n "$ZEN_LINE" ]]; do
+  ZEN_LINE="${ZEN_LINE%$'\r'}"
+  case "$ZEN_LINE" in
+    app.classpath=*)
+      ZEN_VALUE="${ZEN_LINE#app.classpath=}"
+      ZEN_VALUE="${ZEN_VALUE//\$APPDIR/"$ZEN_APP_DIR"}"
+      ZEN_CLASSPATH="${ZEN_CLASSPATH:+$ZEN_CLASSPATH:}$ZEN_VALUE"
+      ;;
+    app.mainclass=*) ZEN_MAIN_CLASS="${ZEN_LINE#app.mainclass=}" ;;
+    java-options=*)
+      ZEN_VALUE="${ZEN_LINE#java-options=}"
+      ZEN_JAVA_OPTIONS+=("${ZEN_VALUE//\$APPDIR/"$ZEN_APP_DIR"}")
+      ;;
+  esac
+done < "$ZEN_CONFIG"
+
+if [[ ! -x "$ZEN_JAVA" || -z "$ZEN_CLASSPATH" || -z "$ZEN_MAIN_CLASS" ]]; then
+  printf '%s\n' 'ZenCampus installation is incomplete. Reinstall the application bundle.' >&2
+  exit 1
+fi
+exec "$ZEN_JAVA" "${ZEN_JAVA_OPTIONS[@]}" -cp "$ZEN_CLASSPATH" "$ZEN_MAIN_CLASS" "$@"

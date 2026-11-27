@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZenCampus</title>
+<meta name="description" content="An unofficial app for students at the University of Augsburg: DigiCampus courses and files, the Mensa menu and the library, also offline.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F3F2EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111518" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="ZenCampus">
+<meta property="og:description" content="An unofficial app for students at the University of Augsburg.">
+<meta property="og:image" content="assets/shots/today-light.webp">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<style>
+@font-face { font-family: Manrope; font-weight: 400; font-display: swap; src: url(assets/fonts/manrope_regular.ttf) format("truetype"); }
+@font-face { font-family: Manrope; font-weight: 500; font-display: swap; src: url(assets/fonts/manrope_medium.ttf) format("truetype"); }
+@font-face { font-family: Manrope; font-weight: 600 800; font-display: swap; src: url(assets/fonts/manrope_semibold.ttf) format("truetype"); }
+
+/* The app's palette: Study in mist blue, Library in sage, Mensa in sand. */
+:root {
+  --bg: #F3F2EE; --text: #1D2428; --muted: #56616A; --line: #DEDDD6;
+  --study: #355F7A; --library: #46664F; --mensa: #7A5A39; --on-study: #FFFFFF;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111518; --text: #E7ECEF; --muted: #A3AFB6; --line: #283037;
+    --study: #9EC4DB; --library: #B8CEBA; --mensa: #DDC3A2; --on-study: #111518;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.65 Manrope, system-ui, sans-serif; }
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--study); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; }
+p { margin: 0; }
+p + p { margin-top: 14px; }
+.col { width: min(680px, 100% - 32px); margin-inline: auto; }
+.wide { width: min(1040px, 100% - 32px); margin-inline: auto; }
+.muted { color: var(--muted); }
+code { font: .9em/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* Every text exists in English and German; the root attribute picks one. */
+html[data-lang="en"] [lang="de"], html[data-lang="de"] [lang="en"] { display: none !important; }
+
+.top { display: flex; align-items: center; gap: 20px; padding: 22px 0; font-size: .95rem; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); text-decoration: none; }
+.brand img { width: 28px; height: 28px; border-radius: 8px; }
+.top nav { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.top nav a { color: var(--muted); text-decoration: none; }
+.top nav a:hover { color: var(--text); }
+.lang button { font: inherit; border: 0; background: none; padding: 0; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.lang button[aria-pressed="true"] { color: var(--text); text-decoration: none; font-weight: 600; cursor: default; }
+@media (max-width: 520px) { .top nav .hide-sm { display: none; } }
+
+.intro { padding: 48px 0 40px; }
+.intro h1 { font-size: clamp(1.9rem, 5vw, 2.7rem); max-width: 18em; }
+.intro p { margin-top: 18px; font-size: 1.1rem; }
+.intro .small { font-size: .95rem; color: var(--muted); }
+.actions { margin-top: 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 22px; }
+.btn { display: inline-block; background: var(--study); color: var(--on-study); font-weight: 700; padding: 11px 20px; border-radius: 10px; text-decoration: none; }
+.btn:hover { filter: brightness(1.08); }
+
+.shots { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 18px; align-items: start; padding-bottom: 8px; }
+.shots figure { margin: 0; }
+.shots img { border-radius: 18px; border: 1px solid var(--line); }
+.shots figcaption { margin-top: 10px; font-size: .86rem; color: var(--muted); }
+@media (max-width: 760px) {
+  .shots { grid-auto-columns: 46%; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; }
+  .shots figure { scroll-snap-align: start; }
+}
+.shots-note { margin-top: 10px; font-size: .86rem; color: var(--muted); }
+
+section { padding: 56px 0; }
+section + section { border-top: 1px solid var(--line); }
+.shots-wrap + section { margin-top: 8px; }
+section h2 { font-size: 1.5rem; margin-bottom: 22px; }
+.part + .part { margin-top: 30px; }
+.part h3 { font-size: 1.08rem; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.part h3::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--c, var(--muted)); }
+
+.files { border-top: 1px solid var(--line); margin-top: 24px; }
+.file { display: grid; grid-template-columns: 7rem 1fr auto; gap: 4px 20px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.file b { font-weight: 700; }
+.file .what { font-size: .95rem; }
+.file .get { font-weight: 700; white-space: nowrap; }
+.file .get.none { font-weight: 400; color: var(--muted); }
+@media (max-width: 560px) {
+  .file { grid-template-columns: 1fr auto; }
+  .file .what { grid-column: 1 / -1; grid-row: 2; }
+}
+
+.qa + .qa { margin-top: 24px; }
+.qa h3 { font-size: 1.02rem; margin-bottom: 4px; }
+
+footer { padding: 32px 0 48px; border-top: 1px solid var(--line); font-size: .88rem; color: var(--muted); }
+footer nav { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="wide">
+  <header class="top">
+    <a class="brand" href="./"><img src="assets/icon.svg" alt="" width="28" height="28">ZenCampus</a>
+    <nav aria-label="Links">
+      <a class="hide-sm" href="#download">Download</a>
+      <a href="https://github.com/binoverfl0w/ZenCampus">GitHub</a>
+      <span class="lang" role="group" aria-label="Language / Sprache">
+        <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+        <span class="muted" aria-hidden="true">/</span>
+        <button type="button" data-set-lang="de" aria-pressed="false">DE</button>
+      </span>
+    </nav>
+  </header>
+</div>
+
+<main>
+  <div class="col intro">
+    <h1><span lang="en">An unofficial campus app for the University of Augsburg</span><span lang="de">Eine inoffizielle Campus-App für die Universität Augsburg</span></h1>
+    <p><span lang="en">It puts your DigiCampus courses, the Mensa menu and your library account in one app. Anything you’ve opened is kept on the device, so your timetable and course files still open where there’s no signal.</span>
+       <span lang="de">Sie bringt deine DigiCampus-Kurse, den Speiseplan der Mensa und dein Bibliothekskonto in eine App. Was du einmal geöffnet hast, bleibt auf dem Gerät, sodass Stundenplan und Kursdateien auch ohne Empfang aufgehen.</span></p>
+    <p class="small"><span lang="en">Free and open source. It isn’t made or endorsed by the university.</span>
+       <span lang="de">Kostenlos und quelloffen. Die App stammt nicht von der Uni und wird auch nicht von ihr unterstützt.</span></p>
+    <div class="actions">
+      <a class="btn" href="#download"><span lang="en">Download</span><span lang="de">Herunterladen</span></a>
+      <a href="https://github.com/binoverfl0w/ZenCampus"><span lang="en">Source code on GitHub</span><span lang="de">Quellcode auf GitHub</span></a>
+    </div>
+  </div>
+
+  <div class="wide shots-wrap">
+    <div class="shots">
+      <figure><picture><source srcset="assets/shots/today-dark.webp" media="(prefers-color-scheme: dark)"><img src="assets/shots/today-light.webp" alt="The Today screen: the next class, the rest of the day and coursework due soon" width="540" height="1110"></picture>
+        <figcaption><span lang="en">Today</span><span lang="de">Heute</span></figcaption></figure>
+      <figure><picture><source srcset="assets/shots/coursework-dark.webp" media="(prefers-color-scheme: dark)"><img src="assets/shots/coursework-light.webp" alt="Coursework from all courses, sorted by due date" width="540" height="1110"></picture>
+        <figcaption><span lang="en">Coursework by due date</span><span lang="de">Aufgaben nach Frist</span></figcaption></figure>
+      <figure><img src="assets/shots/week-light.webp" alt="The week timetable" width="540" height="1110" loading="lazy">
+        <figcaption><span lang="en">The week</span><span lang="de">Die Woche</span></figcaption></figure>
+      <figure><picture><source srcset="assets/shots/mensa-dark.webp" media="(prefers-color-scheme: dark)"><img src="assets/shots/mensa-light.webp" alt="Today's Mensa menu with prices" width="540" height="1110" loading="lazy"></picture>
+        <figcaption>Mensa</figcaption></figure>
+      <figure><picture><source srcset="assets/shots/widgets-dark.webp" media="(prefers-color-scheme: dark)"><img src="assets/shots/widgets-light.webp" alt="ZenCampus widgets on a home screen" width="520" height="1028" loading="lazy"></picture>
+        <figcaption><span lang="en">Home-screen widgets</span><span lang="de">Widgets</span></figcaption></figure>
+    </div>
+    <p class="shots-note"><span lang="en">Screenshots from the Android app, with made-up sample data.</span><span lang="de">Screenshots der Android-App mit erfundenen Beispieldaten.</span></p>
+  </div>
+
+  <section id="features">
+    <div class="col">
+      <h2><span lang="en">What’s in it</span><span lang="de">Was drin ist</span></h2>
+
+      <div class="part" style="--c:var(--study)">
+        <h3><span lang="en">Study</span><span lang="de">Studium</span></h3>
+        <p><span lang="en">Today starts with your next class and its room, then the rest of the day with gaps and cancellations, and whatever is due in the next seven days. Coursework collects Courseware tasks, Vips sheets and submission folders from every course into one list sorted by due date, and Vips opens inside the app, already signed in. Course files sync into ordinary folders on your device. Messages, forums, the calendar and office-hour booking are there too, and the timetable exports as an .ics file.</span>
+           <span lang="de">Heute beginnt mit deinem nächsten Termin samt Raum, danach kommen der Rest des Tages mit Lücken und Ausfällen und alles, was in den nächsten sieben Tagen fällig ist. Unter Aufgaben landen Courseware-Aufgaben, Vips-Blätter und Abgabeordner aus allen Kursen in einer Liste, sortiert nach Frist, und Vips öffnet sich direkt in der App, schon angemeldet. Kursdateien werden in normale Ordner auf deinem Gerät synchronisiert. Nachrichten, Foren, Kalender und Sprechstunden sind auch dabei, und den Stundenplan kannst du als .ics-Datei exportieren.</span></p>
+      </div>
+
+      <div class="part" style="--c:var(--library)">
+        <h3><span lang="en">Library</span><span lang="de">Bibliothek</span></h3>
+        <p><span lang="en">Search the catalogue and see which copies are on the shelf, and where. Once you add your library card you also get your loans, reservations and pickups, can renew a loan, and can have it remind you before something is due.</span>
+           <span lang="de">Durchsuch den Katalog und sieh, welche Exemplare wo im Regal stehen. Mit deinem Bibliotheksausweis kommen Ausleihen, Vormerkungen und Abholungen dazu; du kannst verlängern und dich vor Fristende erinnern lassen.</span></p>
+      </div>
+
+      <div class="part" style="--c:var(--mensa)">
+        <h3>Mensa</h3>
+        <p><span lang="en">The menus of every Studierendenwerk Augsburg location, by day or by week, with vegetarian, vegan and allergen filters and the price for your group. Mark a dish as a favourite and you’ll hear about it when it’s on. In English the dish names are translated, with the German original underneath.</span>
+           <span lang="de">Die Speisepläne aller Standorte des Studierendenwerks Augsburg, nach Tag oder Woche, mit Filtern für vegetarisch, vegan und Allergene und dem Preis für deine Gruppe. Markier ein Gericht als Favorit, dann sagt dir die App Bescheid, wenn es das gibt.</span></p>
+      </div>
+
+      <div class="part">
+        <h3><span lang="en">On the home screen</span><span lang="de">Auf dem Startbildschirm</span></h3>
+        <p><span lang="en">Five widgets on Android and iPhone: Your day, Next class, Mensa today, Due soon and Library. They read from the saved copy, so they don’t wait for the network. Long-press the app icon for shortcuts to Today, Calendar, Mensa and Search. To hand in a file, share it to ZenCampus, or on iPhone open it with ZenCampus from Files.</span>
+           <span lang="de">Fünf Widgets auf Android und iPhone: Dein Tag, Nächster Termin, Mensa heute, Bald fällig und Bibliothek. Sie lesen aus der gespeicherten Kopie und warten nicht aufs Netz. Lang auf das App-Symbol drücken für Verknüpfungen zu Heute, Kalender, Mensa und Suche. Um eine Datei abzugeben, teil sie an ZenCampus oder öffne sie auf dem iPhone in der Dateien-App mit ZenCampus.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <div class="col">
+      <h2><span lang="en">Privacy</span><span lang="de">Datenschutz</span></h2>
+      <p><span lang="en">There is no ZenCampus server. The app connects directly to the services in the privacy policy, including DigiCampus, Microsoft sign-in and the university library.</span>
+         <span lang="de">Es gibt keinen ZenCampus-Server. Die App verbindet sich direkt mit den Diensten in der Datenschutzerklärung, darunter DigiCampus, die Microsoft-Anmeldung und die Universitätsbibliothek.</span></p>
+      <p><span lang="en">You can save several Study or Library sign-ins in this device’s secure storage, separate from the signed-in account. Each is sent only to the sign-in page it fills. The second factor stays on your phone. Remove saved sign-ins in Settings or when you sign out. Disconnecting the library also offers to remove its saved sign-ins. Both removal options are checked by default.</span>
+         <span lang="de">Du kannst mehrere Studien- oder Bibliotheksanmeldungen im sicheren Speicher dieses Geräts ablegen, unabhängig vom angemeldeten Konto. Jede Anmeldung wird nur an die Anmeldeseite gesendet, auf der sie ausgefüllt wird. Der zweite Faktor bleibt auf deinem Handy. Gespeicherte Anmeldungen kannst du in den Einstellungen oder beim Abmelden entfernen. Beim Trennen der Bibliotheksverbindung kannst du auch deren gespeicherte Anmeldungen entfernen. Beide Optionen sind standardmäßig ausgewählt.</span></p>
+      <p><span lang="en">No ads and no analytics. Crash reports stay off unless you switch them on. Uploads, renewals and bookings always show what will be sent and wait for you to confirm.</span>
+         <span lang="de">Keine Werbung, keine Analyse. Absturzberichte bleiben aus, solange du sie nicht einschaltest. Abgaben, Verlängerungen und Buchungen zeigen immer, was gesendet wird, und warten auf deine Bestätigung.</span></p>
+      <p><a href="https://github.com/binoverfl0w/ZenCampus/blob/main/PRIVACY.md"><span lang="en">PRIVACY.md lists what is stored and sent</span><span lang="de">PRIVACY.md listet auf, was gespeichert und gesendet wird</span></a></p>
+    </div>
+  </section>
+
+  <section id="download">
+    <div class="col">
+      <h2>Download</h2>
+      <p id="release"><span lang="en">There’s no public release yet. Once there is, the links below go straight to its files.</span><span lang="de">Noch gibt es keine öffentliche Version. Sobald es eine gibt, führen die Links unten direkt zu ihren Dateien.</span></p>
+      <p class="muted"><span lang="en">Android, Windows and Linux can update themselves from GitHub if you let them.</span><span lang="de">Android, Windows und Linux können sich über GitHub selbst aktualisieren, wenn du das erlaubst.</span></p>
+      <div class="files">
+        <div class="file"><b>Android</b>
+          <span class="what"><span lang="en">Android 8 or newer. Your phone asks once whether the browser may install apps.</span><span lang="de">Android 8 oder neuer. Dein Handy fragt einmal, ob der Browser Apps installieren darf.</span></span>
+          <a class="get" data-asset="android" href="https://github.com/binoverfl0w/ZenCampus/releases/latest">APK</a></div>
+        <div class="file"><b>Windows</b>
+          <span class="what"><span lang="en">Windows 10 or 11, x64, no admin rights needed. It isn’t code-signed yet, so the first start shows a SmartScreen warning: More info → Run anyway.</span><span lang="de">Windows 10 oder 11, x64, ohne Adminrechte. Die App ist noch nicht signiert, deshalb warnt SmartScreen beim ersten Start: Weitere Informationen → Trotzdem ausführen.</span></span>
+          <a class="get" data-asset="windows" href="https://github.com/binoverfl0w/ZenCampus/releases/latest">MSI</a></div>
+        <div class="file"><b>Linux</b>
+          <span class="what"><span lang="en">x86-64 with X11 or XWayland. Unpack it and start <code>zencampus/bin/zencampus</code>.</span><span lang="de">x86-64 mit X11 oder XWayland. Entpacken und <code>zencampus/bin/zencampus</code> starten.</span></span>
+          <a class="get" data-asset="linux" href="https://github.com/binoverfl0w/ZenCampus/releases/latest">tar.gz</a></div>
+        <div class="file"><b>macOS</b>
+          <span class="what"><span lang="en">Apple silicon. The app isn’t signed by Apple, so macOS refuses to open it the first time: go to System Settings → Privacy &amp; Security and choose Open Anyway, once. It tells you about new versions but doesn’t install them itself.</span><span lang="de">Apple Silicon. Die App ist nicht von Apple signiert, deshalb verweigert macOS beim ersten Mal das Öffnen: einmal unter Systemeinstellungen → Datenschutz &amp; Sicherheit „Dennoch öffnen“ wählen. Neue Versionen zeigt sie an, installiert sie aber nicht selbst.</span></span>
+          <a class="get" data-asset="macos" href="https://github.com/binoverfl0w/ZenCampus/releases/latest">DMG</a></div>
+        <div class="file"><b>iPhone</b>
+          <span class="what"><span lang="en">In testing. It will come through TestFlight.</span><span lang="de">Noch im Test. Kommt später über TestFlight.</span></span>
+          <span class="get none"><span lang="en">Later</span><span lang="de">Später</span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="col">
+      <h2><span lang="en">Questions</span><span lang="de">Fragen</span></h2>
+      <div class="qa"><h3><span lang="en">Is this the university’s app?</span><span lang="de">Ist das die App der Uni?</span></h3>
+        <p><span lang="en">No. It’s an independent open-source project and has no connection to the University of Augsburg. It uses the same services you use in the browser.</span><span lang="de">Nein. Es ist ein unabhängiges Open-Source-Projekt ohne Verbindung zur Universität Augsburg. Es nutzt dieselben Dienste wie du im Browser.</span></p></div>
+      <div class="qa"><h3><span lang="en">Do I need a DigiCampus account?</span><span lang="de">Brauche ich einen DigiCampus-Zugang?</span></h3>
+        <p><span lang="en">For Study, yes. The Mensa and the library catalogue work without signing in, and you can add a library card later.</span><span lang="de">Für das Studium ja. Mensa und Bibliothekskatalog gehen ohne Anmeldung, und deinen Bibliotheksausweis kannst du später hinzufügen.</span></p></div>
+      <div class="qa"><h3><span lang="en">What does it cost?</span><span lang="de">Was kostet das?</span></h3>
+        <p><span lang="en">Nothing. There are no ads or in-app purchases, and the code is MIT-licensed.</span><span lang="de">Nichts. Es gibt keine Werbung und keine In-App-Käufe, und der Code steht unter der MIT-Lizenz.</span></p></div>
+      <div class="qa"><h3><span lang="en">Something doesn’t work</span><span lang="de">Etwas funktioniert nicht</span></h3>
+        <p><span lang="en">Please open an issue on <a href="https://github.com/binoverfl0w/ZenCampus/issues">GitHub</a>. Settings → Updates &amp; diagnostics can share a log with personal details removed.</span><span lang="de">Bitte erstell ein Issue auf <a href="https://github.com/binoverfl0w/ZenCampus/issues">GitHub</a>. Unter Einstellungen → Updates &amp; Diagnose kannst du ein Protokoll ohne persönliche Daten teilen.</span></p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="col">
+    <p><span lang="en">ZenCampus is not affiliated with the University of Augsburg.</span><span lang="de">ZenCampus ist nicht mit der Universität Augsburg verbunden.</span></p>
+    <nav aria-label="Project">
+      <a href="https://github.com/binoverfl0w/ZenCampus">GitHub</a>
+      <a href="https://github.com/binoverfl0w/ZenCampus/blob/main/PRIVACY.md"><span lang="en">Privacy</span><span lang="de">Datenschutz</span></a>
+      <a href="https://github.com/binoverfl0w/ZenCampus/blob/main/SECURITY.md"><span lang="en">Security</span><span lang="de">Sicherheit</span></a>
+      <a href="https://github.com/binoverfl0w/ZenCampus/blob/main/LICENSE"><span lang="en">MIT licence</span><span lang="de">MIT-Lizenz</span></a>
+      <a href="assets/fonts/OFL.txt"><span lang="en">Manrope font (OFL)</span><span lang="de">Schrift Manrope (OFL)</span></a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+  function setLang(lang) {
+    root.dataset.lang = lang; root.lang = lang;
+    document.querySelectorAll("[data-set-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.setLang === lang)));
+  }
+  const saved = store.get("lang");
+  setLang(saved === "de" || saved === "en" ? saved : (navigator.language || "").toLowerCase().startsWith("de") ? "de" : "en");
+  document.querySelectorAll("[data-set-lang]").forEach(b => b.addEventListener("click", () => { setLang(b.dataset.setLang); store.set("lang", b.dataset.setLang); }));
+
+  // Point the download links at the latest release's files; without a release they keep the releases page.
+  const patterns = { android: /\.apk$/, windows: /windows.*\.msi$/i, linux: /linux.*\.tar\.gz$/i, macos: /macos.*\.dmg$/i };
+  fetch("https://api.github.com/repos/binoverfl0w/ZenCampus/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+    .then(r => r.ok ? r.json() : null)
+    .then(release => {
+      if (!release || !Array.isArray(release.assets)) return;
+      for (const [key, pattern] of Object.entries(patterns)) {
+        const asset = release.assets.find(a => pattern.test(a.name));
+        const link = document.querySelector(`[data-asset="${key}"]`);
+        if (asset && link) link.href = asset.browser_download_url;
+      }
+      const span = (lang, text) => Object.assign(document.createElement("span"), { lang, textContent: text });
+      const day = locale => new Date(release.published_at).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+      const notes = Object.assign(document.createElement("a"), { href: release.html_url });
+      notes.append(span("en", "what changed"), span("de", "was neu ist"));
+      document.getElementById("release").replaceChildren(
+        span("en", `Latest version: ${release.tag_name}, ${day("en-GB")} (`), span("de", `Aktuelle Version: ${release.tag_name} vom ${day("de-DE")} (`),
+        notes, ").");
+    })
+    .catch(() => {});
+})();
+</script>
+</body>
+</html>

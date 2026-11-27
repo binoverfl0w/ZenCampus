@@ -1,0 +1,19 @@
+<resources>
+    <string name="widget_name">Your day</string>
+    <string name="widget_description">Next class, the next deadline and today\'s Mensa</string>
+    <string name="widget_next_name">Next class</string>
+    <string name="widget_next_description">When and where your next class is</string>
+    <string name="widget_mensa_name">Mensa today</string>
+    <string name="widget_mensa_description">Today\'s dishes and prices, favourites first</string>
+    <string name="widget_due_name">Due soon</string>
+    <string name="widget_due_description">Open coursework deadlines this week</string>
+    <string name="widget_library_name">Library</string>
+    <string name="widget_library_description">Loans due and books ready to pick up</string>
+    <string name="widget_loading">Opening ZenCampus…</string>
+    <string name="shortcut_today">Today</string>
+    <string name="shortcut_calendar">Calendar</string>
+    <string name="shortcut_mensa">Mensa</string>
+    <string name="shortcut_search">Search</string>
+    <string name="shortcut_office_hours">Office hours</string>
+    <string name="share_label">Hand in with ZenCampus</string>
+</resources>

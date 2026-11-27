@@ -1,0 +1,14 @@
+<resources>
+    <color name="widget_surface">#FFFBFAF7</color>
+    <color name="widget_text">#FF1D2428</color>
+    <color name="widget_muted">#FF56616A</color>
+    <color name="widget_line">#FFE6E5E0</color>
+    <color name="widget_study">#FF355F7A</color>
+    <color name="widget_study_tint">#FFDDE8EF</color>
+    <color name="widget_mensa">#FF7A5A39</color>
+    <color name="widget_mensa_tint">#FFF2E4D0</color>
+    <color name="widget_library">#FF46664F</color>
+    <color name="widget_library_tint">#FFDDEADF</color>
+    <color name="widget_alert">#FF9B514B</color>
+    <color name="widget_alert_tint">#FFF5E3DF</color>
+</resources>

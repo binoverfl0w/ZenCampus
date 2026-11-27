@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleDevelopmentRegion</key><string>en</string>
+<key>CFBundleDisplayName</key><string>ZenCampus</string>
+<key>CFBundleExecutable</key><string>ZenCampus</string>
+<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+<key>CFBundleName</key><string>ZenCampus</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
+<key>ZenUpdateRepository</key><string>$(ZEN_UPDATE_REPOSITORY)</string>
+<key>ZenCrashDsn</key><string>$(ZEN_CRASH_DSN)</string>
+<key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
+<key>LSRequiresIPhoneOS</key><true/>
+<key>UIFileSharingEnabled</key><true/>
+<key>LSSupportsOpeningDocumentsInPlace</key><true/>
+<key>CFBundleDocumentTypes</key><array><dict>
+    <key>CFBundleTypeName</key><string>Submission file</string>
+    <key>CFBundleTypeRole</key><string>Viewer</string>
+    <key>LSHandlerRank</key><string>Alternate</string>
+    <key>LSItemContentTypes</key><array><string>public.data</string></array>
+</dict></array>
+<key>CFBundleURLTypes</key><array><dict>
+    <key>CFBundleURLName</key><string>$(PRODUCT_BUNDLE_IDENTIFIER).navigation</string>
+    <key>CFBundleURLSchemes</key><array><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string></array>
+</dict></array>
+<key>ZenWidgetGroup</key><string>$(ZEN_WIDGET_GROUP)</string>
+<key>UIApplicationShortcutItems</key>
+<array>
+	<dict>
+		<key>UIApplicationShortcutItemIconSymbolName</key>
+		<string>sun.max</string>
+		<key>UIApplicationShortcutItemTitle</key>
+		<string>Today</string>
+		<key>UIApplicationShortcutItemType</key>
+		<string>today</string>
+	</dict>
+	<dict>
+		<key>UIApplicationShortcutItemIconSymbolName</key>
+		<string>calendar</string>
+		<key>UIApplicationShortcutItemTitle</key>
+		<string>Calendar</string>
+		<key>UIApplicationShortcutItemType</key>
+		<string>calendar</string>
+	</dict>
+	<dict>
+		<key>UIApplicationShortcutItemIconSymbolName</key>
+		<string>fork.knife</string>
+		<key>UIApplicationShortcutItemTitle</key>
+		<string>Mensa</string>
+		<key>UIApplicationShortcutItemType</key>
+		<string>mensa</string>
+	</dict>
+	<dict>
+		<key>UIApplicationShortcutItemIconSymbolName</key>
+		<string>magnifyingglass</string>
+		<key>UIApplicationShortcutItemTitle</key>
+		<string>Search</string>
+		<key>UIApplicationShortcutItemType</key>
+		<string>search</string>
+	</dict>
+</array>
+<key>UIBackgroundModes</key><array><string>fetch</string></array>
+<key>BGTaskSchedulerPermittedIdentifiers</key><array><string>$(PRODUCT_BUNDLE_IDENTIFIER).refresh</string></array>
+<key>UIApplicationSceneManifest</key><dict><key>UIApplicationSupportsMultipleScenes</key><false/></dict>
+<key>CADisableMinimumFrameDurationOnPhone</key><true/>
+<key>UILaunchScreen</key><dict><key>UIColorName</key><string>LaunchBackground</string></dict>
+<key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
+</dict></plist>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_card_study">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <ImageView android:layout_width="7dp" android:layout_height="7dp" android:src="@drawable/widget_dot_study" android:importantForAccessibility="no" />
+        <TextView android:id="@+id/next_label" style="@style/WidgetLabel" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="Next class" />
+    </LinearLayout>
+    <TextView android:id="@+id/next_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp"
+        android:fontFamily="@font/manrope_semibold" android:textSize="28sp" android:letterSpacing="-0.02" android:textColor="@color/widget_study" android:maxLines="1" android:text="10:00" />
+    <TextView android:id="@+id/next_day" style="@style/WidgetTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="12.5sp" android:text="Mon 23 Nov" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <TextView android:id="@+id/next_title" style="@style/WidgetTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="2" android:text="Real-Time Systems" />
+    <TextView android:id="@+id/next_detail" style="@style/WidgetDetail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1058 N · until 11:30" />
+</LinearLayout>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_card">
+    <LinearLayout android:id="@+id/day_header" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingHorizontal="4dp">
+        <TextView android:id="@+id/day_date" style="@style/WidgetTitle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textSize="15sp" android:text="Friday, 20 November" />
+        <TextView android:id="@+id/day_weather" style="@style/WidgetDetail" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="9° · Rain 63%" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/day_row_0" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="6dp"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingHorizontal="10dp" android:background="@drawable/widget_row_study">
+        <TextView android:id="@+id/day_avatar_0" style="@style/WidgetAvatar" android:background="@drawable/widget_avatar_study" android:text="RT" />
+        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:orientation="vertical">
+            <TextView android:id="@+id/day_title_0" style="@style/WidgetTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Real-Time Systems" />
+            <TextView android:id="@+id/day_detail_0" style="@style/WidgetDetail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="10:00 – 11:30 · 1058 N" />
+        </LinearLayout>
+        <TextView android:id="@+id/day_badge_0" style="@style/WidgetChip" android:layout_marginStart="8dp" android:background="@drawable/widget_chip_surface" android:textColor="@color/widget_study" android:text="Mon 23 Nov" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/day_row_1" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="6dp"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingHorizontal="10dp" android:background="@drawable/widget_row_alert">
+        <TextView android:id="@+id/day_avatar_1" style="@style/WidgetAvatar" android:background="@drawable/widget_avatar_alert" android:text="AD" />
+        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:orientation="vertical">
+            <TextView android:id="@+id/day_title_1" style="@style/WidgetTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Exercises Sheet 05" />
+            <TextView android:id="@+id/day_detail_1" style="@style/WidgetDetail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Wed 25 Nov · 10:00 · +1 more" />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/day_row_2" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="6dp"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingHorizontal="10dp" android:background="@drawable/widget_row_mensa">
+        <ImageView android:layout_width="28dp" android:layout_height="28dp" android:scaleType="center" android:background="@drawable/widget_avatar_mensa" android:src="@drawable/widget_ic_dining" android:importantForAccessibility="no" />
+        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:orientation="vertical">
+            <TextView android:id="@+id/day_title_2" style="@style/WidgetTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="★ Organic Mie noodles" />
+            <TextView android:id="@+id/day_detail_2" style="@style/WidgetDetail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="2,90 € · +6 more" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

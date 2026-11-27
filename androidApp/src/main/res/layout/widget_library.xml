@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center_vertical" android:paddingHorizontal="14dp" android:paddingVertical="8dp" android:background="@drawable/widget_card_library">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <ImageView android:layout_width="7dp" android:layout_height="7dp" android:src="@drawable/widget_dot_library" android:importantForAccessibility="no" />
+        <TextView android:id="@+id/library_label" style="@style/WidgetLabel" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="Library" />
+    </LinearLayout>
+    <TextView android:id="@+id/library_headline" style="@style/WidgetTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="2 loans · next due 3 Dec" />
+    <TextView android:id="@+id/library_detail" style="@style/WidgetDetail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1 ready to pick up" />
+</LinearLayout>

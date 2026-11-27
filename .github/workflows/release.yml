@@ -1,0 +1,240 @@
+name: Release
+
+# Pushing a tag v<version> (matching zencampus.version) builds, signs and publishes a GitHub release.
+# The apps check this repository's latest release and offer it as an update.
+# Running the workflow by hand builds only the macOS files and keeps them as a workflow artifact, to try the packaging.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android-linux:
+    name: Android and Linux files
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools platforms;android-35 build-tools;35.0.0
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+      - name: Check the tag matches the version
+        run: |
+          version="$(sed -n 's/^zencampus\.version=//p' gradle.properties)"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match zencampus.version=$version"; exit 1
+          fi
+          scripts/release_notes.sh "$version" > /dev/null
+      - name: Test
+        run: ./gradlew :shared:jvmTest :desktopApp:test :androidApp:testDebugUnitTest --no-daemon
+      - name: Decode the signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then echo "The ANDROID_KEYSTORE_BASE64 secret is missing"; exit 1; fi
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "ZENCAMPUS_KEYSTORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+      - name: Build the release files
+        env:
+          ZENCAMPUS_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ZENCAMPUS_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ZENCAMPUS_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ZENCAMPUS_UPDATE_REPO: ${{ github.repository }}
+          ZENCAMPUS_CRASH_DSN: ${{ secrets.ZENCAMPUS_CRASH_DSN }}
+          # The version installed above; the runner image also carries newer build-tools.
+          ZENCAMPUS_BUILD_TOOLS: 35.0.0
+        run: ./scripts/package_release.sh
+      - name: Remove the signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+      # R8 renumbers lines in the APK; Sentry restores them from this build's mapping, which the APK names by its ID.
+      - name: Upload the Android mapping to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+        run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then echo "No SENTRY_AUTH_TOKEN secret; Android crash reports will show R8 line numbers."; exit 0; fi
+          # An organization token names its organization; SENTRY_ORG is only needed with a personal token.
+          if [ -z "$SENTRY_ORG" ]; then unset SENTRY_ORG; fi
+          npx --yes @sentry/cli@3.8.2 upload-proguard --project zencampus --require-one --log-level warn \
+            androidApp/build/outputs/mapping/release/mapping.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-linux
+          path: |
+            build/release/zencampus-*.apk
+            build/release/zencampus-*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  macos:
+    name: macOS files
+    runs-on: macos-15
+    timeout-minutes: 90
+    outputs:
+      notarized: ${{ steps.signing.outputs.notarized }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+      - name: Use the preinstalled Android SDK
+        run: |
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
+          test -d "$sdk" || { echo "No Android SDK on this runner"; exit 1; }
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+      - name: Check the tag matches the version
+        if: github.event_name == 'push'
+        run: |
+          version="$(sed -n 's/^zencampus\.version=//p' gradle.properties)"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match zencampus.version=$version"; exit 1
+          fi
+      - name: Set up signing and notarisation
+        id: signing
+        env:
+          MAC_CERTIFICATE_P12_BASE64: ${{ secrets.MAC_CERTIFICATE_P12_BASE64 }}
+          MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          MAC_SIGN_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
+          NOTARY_KEY_P8_BASE64: ${{ secrets.NOTARY_KEY_P8_BASE64 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+        run: |
+          if [ -z "$MAC_CERTIFICATE_P12_BASE64" ]; then
+            echo "No Developer ID certificate: building an unsigned test package, which is not published."
+            echo "notarized=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          keychain="$RUNNER_TEMP/zencampus.keychain-db"
+          password="$(openssl rand -hex 24)"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          printf '%s' "$MAC_CERTIFICATE_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$keychain" -P "$MAC_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/certificate.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" >/dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          echo "ZENCAMPUS_MAC_KEYCHAIN=$keychain" >> "$GITHUB_ENV"
+          echo "ZENCAMPUS_MAC_SIGN_IDENTITY=$MAC_SIGN_IDENTITY" >> "$GITHUB_ENV"
+          if [ -z "$NOTARY_KEY_P8_BASE64" ]; then
+            echo "No notarisation key: the package is signed but not notarised, and is not published."
+            echo "notarized=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          printf '%s' "$NOTARY_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/notary.p8"
+          echo "ZENCAMPUS_NOTARY_KEY_PATH=$RUNNER_TEMP/notary.p8" >> "$GITHUB_ENV"
+          echo "ZENCAMPUS_NOTARY_KEY_ID=$NOTARY_KEY_ID" >> "$GITHUB_ENV"
+          echo "ZENCAMPUS_NOTARY_ISSUER=$NOTARY_ISSUER_ID" >> "$GITHUB_ENV"
+          echo "notarized=true" >> "$GITHUB_OUTPUT"
+      - name: Build the macOS files
+        env:
+          ZENCAMPUS_UPDATE_REPO: ${{ github.repository }}
+          ZENCAMPUS_CRASH_DSN: ${{ secrets.ZENCAMPUS_CRASH_DSN }}
+        run: ./scripts/package_macos.sh
+      - name: Remove the signing material
+        if: always()
+        run: |
+          if [ -n "${ZENCAMPUS_MAC_KEYCHAIN:-}" ]; then security delete-keychain "$ZENCAMPUS_MAC_KEYCHAIN" || true; fi
+          rm -f "$RUNNER_TEMP/notary.p8"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos
+          path: |
+            build/release/zencampus-*-macos-arm64.dmg
+            build/release/zencampus-*-macos-arm64.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  windows:
+    name: Windows installer
+    if: github.event_name == 'push'
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+      - name: Use the preinstalled Android SDK
+        run: |
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          test -n "$sdk" && test -d "$sdk" || { echo "No Android SDK on this runner"; exit 1; }
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+      - name: Check the tag matches the version
+        run: |
+          version="$(sed -n 's/^zencampus\.version=//p' gradle.properties | tr -d '\r')"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match zencampus.version=$version"; exit 1
+          fi
+      - name: Test and build the installer
+        env:
+          ZENCAMPUS_UPDATE_REPO: ${{ github.repository }}
+          ZENCAMPUS_CRASH_DSN: ${{ secrets.ZENCAMPUS_CRASH_DSN }}
+        # Unsigned for now: Windows SmartScreen asks once before the first start.
+        run: |
+          ./gradlew :desktopApp:test :desktopApp:packageMsi --no-daemon
+          version="$(sed -n 's/^zencampus\.version=//p' gradle.properties | tr -d '\r')"
+          mkdir -p build/release
+          cp desktopApp/build/compose/binaries/main/msi/ZenCampus-*.msi "build/release/zencampus-$version-windows-x86_64.msi"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows
+          path: build/release/zencampus-*-windows-x86_64.msi
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish the release
+    needs: [android-linux, macos, windows]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: android-linux
+          path: build/release
+      - uses: actions/download-artifact@v8
+        with:
+          name: windows
+          path: build/release
+      # The macOS dmg is always published. Without notarisation the student allows the app once in System Settings →
+      # Privacy & Security, and it links to the release page instead of updating itself, so the update zip is left out.
+      - uses: actions/download-artifact@v8
+        with:
+          name: macos
+          path: build/release
+      - name: Leave out the macOS update zip unless notarised
+        if: needs.macos.outputs.notarized != 'true'
+        run: rm -f build/release/zencampus-*-macos-arm64.zip
+      - name: Write the checksums
+        run: (cd build/release && sha256sum zencampus-* > SHA256SUMS && cat SHA256SUMS)
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # The release notes are the version's section of CHANGELOG.md, the same text the tag message was made from.
+        run: |
+          scripts/release_notes.sh "${GITHUB_REF_NAME#v}" > "$RUNNER_TEMP/notes.txt"
+          gh release create "$GITHUB_REF_NAME" build/release/* --verify-tag --title "ZenCampus ${GITHUB_REF_NAME#v}" --notes-file "$RUNNER_TEMP/notes.txt"
